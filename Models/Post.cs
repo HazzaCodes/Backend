@@ -16,6 +16,8 @@ namespace Models
     public DateTime LastUpdated { get; set; } = DateTime.UtcNow; // Add this property
     public List<Comment> Comments{get;set;}
     public int UserId{get; set;}
+
+    public string PostedBy {get; set;} = string.Empty;
     public User User { get; set; }
 
 }

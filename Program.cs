@@ -1,4 +1,3 @@
-
 global using Backend.Data;
 global using AutoMapper;
 global using Microsoft.EntityFrameworkCore;
@@ -20,57 +19,73 @@ using Backend.UserService.CommentService;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+
+builder.Services.AddDbContext<DataContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(
-    c =>
-    { c.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme{
-        Description = """ Standard Authroization header using the Bearer scheme. Example: bearer {token}" """,
+builder.Services.AddSwaggerGen(c => {
+    c.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme {
+        Description = """Standard Authorization header using the Bearer scheme. Example: "bearer {token}" """,
         In = ParameterLocation.Header,
-        Name =  "Authorization",
+        Name = "Authorization",
         Type = SecuritySchemeType.ApiKey
     });
-        c.OperationFilter<SecurityRequirementsOperationFilter>();
-    });
 
+    c.OperationFilter<SecurityRequirementsOperationFilter>();
+});
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<IPostService, PostService>();
-builder.Services.AddScoped<IlikeService, LikeService>();
 
-
-
-builder.Services.AddDbContext<DataContext>(options => 
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddAutoMapper(typeof(Program).Assembly);
-
-
+// builder.Services.AddScoped<IPostService, PostService>();
+// builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options => {
-        options.TokenValidationParameters = new TokenValidationParameters {
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(builder.Configuration.GetSection("AppSetting:Token").Value!)),
+            IssuerSigningKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(builder.Configuration.GetSection("appSetting:Token").Value!)),
             ValidateIssuer = false,
             ValidateAudience = false
         };
     });
+builder.Services.AddHttpContextAccessor();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AngularApp",
+        builder =>
+        {
+            builder.WithOrigins("http://localhost:4200")
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        });
+});
 
 var app = builder.Build();
-
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    app.UseDeveloperExceptionPage();
 }
 
+app.UseCors("AngularApp");
+
 app.UseHttpsRedirection();
+
+app.UseAuthentication();
 
 app.UseAuthorization();
 
 app.MapControllers();
 
 app.Run();
+
+
+

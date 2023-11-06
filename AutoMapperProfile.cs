@@ -15,9 +15,6 @@ namespace Backend
              CreateMap<Comment, GetCommentDTO>();
              CreateMap<AddPostDTO, Post>();
              CreateMap<UpdatePostDTO, Post>();
-             CreateMap<AddCommentDTO, Comment>();
-             CreateMap<UpdateCommentDTO, Comment>();
-             CreateMap<Comment, UpdateCommentDTO>();
         }
     }
 }

@@ -9,7 +9,7 @@ namespace Backend.UserService
 {
     public interface IAuthenticationService
     {
-        Task<ServiceResponse<int>> Register(User user, string password);
+        Task<ServiceResponse<int>> Register(User user, string password, string ConfirmedPassword);
         Task<ServiceResponse<string>> Login(string username, string password);
         
     }

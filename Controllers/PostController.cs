@@ -11,7 +11,8 @@ using System.Security.Cryptography.X509Certificates;
 namespace Backend.Controllers
 {
     [Authorize]
-    [Route("[controller]")]
+    [ApiController]
+    [Route("api/[controller]")]
     public class PostController : Controller
     {
       
@@ -20,9 +21,10 @@ namespace Backend.Controllers
       {
         this.postService = postService;
       }
-      [HttpGet("Get posts")]
-      public async Task<ActionResult<ServiceResponse<List<GetPostDTO>>>> GetPosts() {
+      [HttpGet("GetPosts")]
+     public async Task<ActionResult<ServiceResponse<List<GetPostDTO>>>> GetPosts() {
         int userId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)!.Value);
+        
         var serviceResponse = await postService.GetPosts(userId);
 
         if (serviceResponse.Success) {
@@ -32,7 +34,20 @@ namespace Backend.Controllers
 
       }
 
-      [HttpGet("Get post details{postId}")]
+
+       [HttpGet("GetAllPosts")]
+     public async Task<ActionResult<ServiceResponse<List<GetPostDTO>>>> GetAllPosts() {
+        
+        var serviceResponse = await postService.GetAllPosts();
+
+        if (serviceResponse.Success) {
+          return Ok(serviceResponse);
+        }
+        return BadRequest(serviceResponse);
+
+      }
+
+      [HttpGet("GetPost{postId}")]
       public async Task<ActionResult<ServiceResponse<GetPostDTO>>> GetPost(int postId) {
 
        var serviceResponse = await postService.GetPost(postId);
@@ -42,7 +57,7 @@ namespace Backend.Controllers
        return BadRequest(serviceResponse);
       }
 
-      [HttpPost("Add post")]
+      [HttpPost("AddPost")]
       public async Task<ActionResult<ServiceResponse<GetPostDTO>>> AddPost(AddPostDTO newPost) {
          int userId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)!.Value);
             if (newPost is null) {
@@ -58,10 +73,10 @@ namespace Backend.Controllers
          }
          return BadRequest(serviceResponse);
       }
-      [HttpPut("Update post/{id}")]
-      public async Task<ActionResult<ServiceResponse<GetPostDTO>>> UpdatePost(UpdatePostDTO updatedPost) {
+      [HttpPut("UpdatePost/{postId}")]
+      public async Task<ActionResult<ServiceResponse<GetPostDTO>>> UpdatePost(UpdatePostDTO updatedPost, int postId) {
         int userId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)!.Value);
-        var serviceResponse = await postService.UpdatePost(updatedPost, userId);
+        var serviceResponse = await postService.UpdatePost(updatedPost,postId, userId);
         if (serviceResponse.Success) {
           return Ok(serviceResponse);
         }
@@ -69,7 +84,7 @@ namespace Backend.Controllers
         
       }
       
-      [HttpDelete("Delete post/{postId}")]
+      [HttpDelete("DeletePost/{postId}")]
       public async Task<ActionResult<ServiceResponse<GetPostDTO>>> DeletePost(int postId) {
         int userId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)!.Value);
 

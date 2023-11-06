@@ -23,6 +23,18 @@ namespace Backend.UserService
             
         }
 
+        public async Task<ServiceResponse<List<GetPostDTO>>> GetAllPosts() {
+             var serviceResponse = new ServiceResponse<List<GetPostDTO>>();
+            try {
+            var posts = context.Posts;
+            serviceResponse.Data = posts.Select(post => mapper.Map<GetPostDTO>(post)).ToList();
+            } catch (Exception) {
+                serviceResponse.Success = false;
+                serviceResponse.Message = "Failed to retrieve posts";
+            }
+            return serviceResponse;
+        }
+
         public async Task<ServiceResponse<List<GetPostDTO>>> GetPosts(int userId) {
            var serviceResponse = new ServiceResponse<List<GetPostDTO>>();
            var user = await context.Users.FirstOrDefaultAsync(user => user.Id == userId);
@@ -36,12 +48,15 @@ namespace Backend.UserService
             return serviceResponse;
            
     }
-
-    public async Task<ServiceResponse<GetPostDTO>> GetPost(int id) {
+    
+    public async Task<ServiceResponse<GetPostDTO>> GetPost(int postId) {
         var serviceResponse = new ServiceResponse<GetPostDTO>();
         try {
-        var post = await context.Posts.FirstOrDefaultAsync(p => p.Id == id);
+        var post = await context.Posts.FirstOrDefaultAsync(p => p.Id == postId);
+        var user = await context.Users.FirstOrDefaultAsync(u => u.Id == post.UserId
+        );
         serviceResponse.Data = mapper.Map<GetPostDTO>(post);
+        serviceResponse.Data.PostedBy = post.User.Username;
         serviceResponse.Message = "Post retrieved successfully";
         } catch(Exception) {
             serviceResponse.Success = false;
@@ -57,6 +72,7 @@ namespace Backend.UserService
         var user = await context.Users.FirstOrDefaultAsync(u => u.Id == userId);
         var post = mapper.Map<Post>(postDTO);
         post.UserId = userId;
+        post.PostedBy = user.Username;
         context.Posts.Add(post);
         await context.SaveChangesAsync();
         serviceResponse.Data = post.Id;
@@ -68,9 +84,8 @@ namespace Backend.UserService
         
     }
 
-    public async Task<ServiceResponse<GetPostDTO>> UpdatePost(UpdatePostDTO updatedPost, int userId) {
+    public async Task<ServiceResponse<GetPostDTO>> UpdatePost(UpdatePostDTO updatedPost, int postId, int userId) {
         var serviceResponse = new ServiceResponse<GetPostDTO>();
-        int postId = updatedPost.Id;
         try {
         var post = context.Posts.FirstOrDefault(p => p.Id == postId && p.User.Id == userId);
         mapper.Map(updatedPost, post);

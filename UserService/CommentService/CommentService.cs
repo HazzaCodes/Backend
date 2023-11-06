@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Metadata.Ecma335;
 using System.Threading.Tasks;
+using AutoMapper.Execution;
 
 namespace Backend.UserService.CommentService
 {
@@ -17,25 +18,25 @@ namespace Backend.UserService.CommentService
             this.mapper = mapper;
         }
 
-        public async Task<ServiceResponse<GetCommentDTO>> AddComment(AddCommentDTO newComment, int commenterId)
+        public async Task<ServiceResponse<GetCommentDTO>> AddComment(int postId, string newComment,  int commenterId)
         {
             var serviceResponse = new ServiceResponse<GetCommentDTO>();
         
             try{
-                var post = await context.Posts.FirstOrDefaultAsync(p => p.Id  == newComment.PostId);
+                var post = await context.Posts.FirstOrDefaultAsync(p => p.Id  == postId);
+                var user = await context.Users.FirstOrDefaultAsync(u => u.Id == commenterId);
 
                 if (post is null) {
-                    serviceResponse.Message = "post is null not found can't add to post " + newComment.PostId;
+                    serviceResponse.Message = "post is null not found can't add to post " + postId;
                     return serviceResponse;
                 }
-                Comment comment = mapper.Map<Comment>(newComment);
-                comment.UserId = commenterId;
+                var comment = new Comment{PostId = postId, Content = newComment, Post = post, UserId = commenterId, Commenter = user.Username};
                 context.Comments.Add(comment);
                 await context.SaveChangesAsync();
                 serviceResponse.Data = mapper.Map<GetCommentDTO>(comment);
                 serviceResponse.Message = "Comment added successfully";
             } catch (Exception) {
-                serviceResponse.Message =  "post id = " + newComment.PostId + " commenter id = " + commenterId;
+                serviceResponse.Message =  "post id = " + postId + " commenter id = " + commenterId;
             }
             
      
@@ -81,18 +82,18 @@ namespace Backend.UserService.CommentService
             return serviceResponse;
         }
 
-        public async Task<ServiceResponse<GetCommentDTO>> UpdateComment(UpdateCommentDTO newComment, int userId)
+        public async Task<ServiceResponse<GetCommentDTO>> UpdateComment(int postId, int commentId, string newComment, int userId)
         {
             var serviceResponse = new ServiceResponse<GetCommentDTO>();
 
             try
             {
-                var comment = await context.Comments.FirstOrDefaultAsync(c => c.Id == newComment.CommentId&&
-                c.PostId == newComment.PostId && c.UserId == userId);
+                var comment = await context.Comments.FirstOrDefaultAsync(c => c.Id == commentId&&
+                c.PostId == postId && c.UserId == userId);
                 mapper.Map(newComment, comment);
                 comment.LastUpdated = DateTime.UtcNow;
                 await context.SaveChangesAsync();
-                serviceResponse.Message = "Updated message successfully";
+                serviceResponse.Message = "Updated  comment successfully";
                 serviceResponse.Data = mapper.Map<GetCommentDTO>(comment);
             }
             catch (Exception)

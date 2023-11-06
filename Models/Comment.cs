@@ -10,9 +10,11 @@ public class Comment
 {
     public int Id { get; set; }
     public string Content { get; set; } = string.Empty;
+
+    public string Commenter { get; set; } = string.Empty;
+
     public DateTime DateCommented { get; set; } = DateTime.UtcNow;
     public DateTime LastUpdated { get; set; } = DateTime.UtcNow;
-
     // Define the foreign key for User
     public int  UserId { get; set; }
     public User User { get; set; }

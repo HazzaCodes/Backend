@@ -9,6 +9,8 @@ namespace Backend.Dtos
     {
         public string Content { get; set; } = string.Empty;
         public DateTime DateCommented { get; set; } = DateTime.UtcNow;
+
+        public string Commenter {get; set;} = string.Empty;
         public DateTime LastUpdated { get; set; } = DateTime.UtcNow;
         public int Likes { get; set; } // Number of likes
         public int Dislikes { get; set; } // Number of dislikes

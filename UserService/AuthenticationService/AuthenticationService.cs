@@ -36,12 +36,12 @@ namespace Backend.UserService
             if (user is null)
             {
                 serviceResponse.Success = false;
-                serviceResponse.Message = "User " + username + " Doesn't exist";
+                serviceResponse.Message = "Invalid uername or password";
             }
             else if (!VerifyPasswordHash(password, user.PasswordHash, user.PasswordSalt))
             {
                 serviceResponse.Success = false;
-                serviceResponse.Message = "Wrong password";
+                serviceResponse.Message = "Invalid username or password";
             }
             else
             {
@@ -59,7 +59,7 @@ namespace Backend.UserService
 
         }
         [HttpPost("Regsiter")]
-        public async Task<ServiceResponse<int>> Register(User user, string password)
+        public async Task<ServiceResponse<int>> Register(User user, string password, string confirmPassword)
         {
             var serviceResponse = new ServiceResponse<int>();
             if (await UserExists(user.Username))
@@ -68,6 +68,12 @@ namespace Backend.UserService
                 serviceResponse.Message = "User " + user.Username + " already exists";
                 return serviceResponse;
             }
+            if (password != confirmPassword) {
+                serviceResponse.Success = false;
+                serviceResponse.Message = "Passwords do not match";
+                return serviceResponse;
+            }
+            serviceResponse.Message = "pass = " +  password +" conf = " + confirmPassword;
             CreatePasswordHash(password, out byte[] passwordHash, out byte[] passwordSalt);
             user.PasswordHash = passwordHash;
             user.PasswordSalt = passwordSalt;
